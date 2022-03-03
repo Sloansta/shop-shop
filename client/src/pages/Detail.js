@@ -6,6 +6,8 @@ import { QUERY_PRODUCTS } from '../utils/queries';
 import spinner from '../assets/spinner.gif';
 
 import { useStoreContext } from '../utils/GlobalState';
+import { idbPromise } from '../utils/helpers';
+
 import {
   REMOVE_FROM_CART,
   UPDATE_CART_QUANTITY,
@@ -52,15 +54,24 @@ function Detail() {
   };
 
   useEffect(() => {
+
+    // already in global store
     if (products.length) {
       setCurrentProduct(products.find((product) => product._id === id));
-    } else if(data) {
+    } else if(data) { // retrieved from server
       dispatch({
         type: UPDATE_PRODUCTS,
         products: data.products
       });
+    } else if(!loading) { // get cache from idb
+      idbPromise('products', 'get').then((indexedProducts) => {
+        dispatch({
+          type: UPDATE_PRODUCTS,
+          products: indexedProducts
+        });
+      });
     }
-  }, [products, data, dispatch, id]);
+  }, [products, data, loading, dispatch, id]);
 
   return (
     <>
